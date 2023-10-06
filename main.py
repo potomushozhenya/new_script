@@ -1,6 +1,6 @@
 import os
 import zipfile
-import shutil
+import rarfile
 
 
 def main():
@@ -15,20 +15,23 @@ def main():
         os.mkdir('unzipped')
     unzipped_path = basedir + "\\source\\unzipped\\"
     for arch in zips:
-        with zipfile.ZipFile(arch, 'r') as myzip:
-            for item in myzip.namelist():
-                if ".tex" in item and item.count('/') >= 2:
-                    myzip.extract(item, unzipped_path)
-    os.chdir(basedir)
-    if not os.path.exists('result'):
-        os.mkdir('result')
-    os.chdir('result')
-    unarch_list = os.listdir(unzipped_path)
-    for unarch in unarch_list:
-        curr_dir_path = unzipped_path + unarch
-        shutil.make_archive(unarch, 'zip', curr_dir_path)
+        bad_name = ""
+        if ".zip" in arch:
+            with zipfile.ZipFile(arch, 'r') as myzip:
+                bad_name = (myzip.namelist()[0]).split('/')[0]
+                for item in myzip.namelist():
+                    if ".tex" in item and item.count('/') >= 2:
+                        myzip.extract(item, unzipped_path)
+        if ".rar" in arch and ".part2" not in arch:
+            with rarfile.RarFile(arch, 'r') as myrar:
+                bad_name = (myrar.namelist()[0]).split('/')[0]
+                for item in myrar.namelist():
+                    if ".tex" in item and item.count('/') >= 2:
+                        myrar.extract(item, unzipped_path)
+        os.chdir('unzipped')
+        os.rename(bad_name, os.path.splitext(arch)[0])
+        os.chdir('..')
 
 
 if __name__ == '__main__':
     main()
-
